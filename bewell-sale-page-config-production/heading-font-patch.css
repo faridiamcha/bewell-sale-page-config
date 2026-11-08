@@ -1,0 +1,4 @@
+/* Use the Thai font already loaded by Bewell's storefront theme. */
+#bw-enlight-sale#bw-enlight-sale :is(h1,h2,h3,h4,h5,h6) {
+  font-family: "Noto Sans Thai", sans-serif !important;
+}

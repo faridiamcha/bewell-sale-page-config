@@ -1,0 +1,385 @@
+<script>
+/*
+ * BEWELL ENLIGHT — WEB EDITION / 2026-11-03
+ * วางหลัง HTML ใน HTML Code โดยครอบแท็ก script เปิดและปิด (ดูคู่มือ)
+ * ไม่ใช้ API key, ไม่แก้ราคาสินค้า, ไม่สร้าง Rule, ไม่ใช้ eval(), ไม่ส่งคำสั่งซื้อ
+ * อ่าน PUBLIC PDP บนโดเมนเดียวกัน แล้ว POST เข้า Magento cart ตามตัวเลือกจริง
+ * SEARCH: EDIT S01..S07 สำหรับจุดแก้ไขที่ใช้บ่อย
+ */
+(function () {
+  'use strict';
+
+  // === EDIT S01: การเปิดใช้งาน ===
+  const CONFIG = {
+    // EDIT S00: draft = แสดงราคา/โค้ด/ของแถมตัวอย่างชัดเจน; live = โชว์เฉพาะสิทธิ์ verified แล้ว
+    presentationMode: 'draft',
+    hideBreadcrumbs: true, // ซ่อนเฉพาะหน้า CMS ที่มี root นี้
+    gallery: {autoplay: true, intervalMs: 5500}, // ปัด/ลูกศรได้เสมอ; เคารพ reduced motion
+    cartEnabled: true,       // false = ตรวจดีไซน์อย่างเดียว; true = ส่งสินค้าจริงเข้าตะกร้า
+    allowedOrigin: 'https://bewellofficial.com', // เปลี่ยนเมื่อทดสอบบน staging/domain อื่น
+    storeBase: '/',          // เช่น /th/ ถ้า Magento เปิด Add Store Code to URLs จริง
+    redirectToCart: true,    // สำเร็จทุกชิ้นแล้วไปตะกร้า; ไม่ผ่าน PDP
+    maxQty: 10,              // ข้อจำกัดเฉพาะ UI; Magento ยังตรวจ stock/min/max/qty increments จริง
+    timeoutMs: 20000,
+
+    // === EDIT S02: แคมเปญคูปอง ===
+    // ENLIGHT1000 ยังเป็นโค้ดจำลอง: draft แสดงพร้อมป้ายตัวอย่าง ส่วน live ซ่อนจน verified=true
+    // ตัวอย่างนี้รองรับประมาณการ "ลดคงที่ต่อชิ้น" เท่านั้น ไม่รองรับ fixed cart / percent / tier
+    // ปุ่มคัดลอกไม่ apply คูปองเอง ลูกค้ากรอกในตะกร้า; จะไม่แทนโค้ดเดิมของลูกค้า
+    coupon: {
+      enabled: true,
+      verified: false,       // ตั้ง true เมื่อทดสอบโค้ดจริงผ่านแล้ว ไม่ใช่ระบบตรวจ Rule อัตโนมัติ
+      code: 'ENLIGHT1000',
+      fixedDiscountPerMainUnit: 1000,
+      minMainSubtotal: 0,    // เช็คจากเก้าอี้ที่เลือกในหน้านี้เท่านั้น ไม่ใช่ยอดตะกร้าเดิม
+      terms: 'ลดเพิ่ม 1,000 บาทต่อเก้าอี้ 1 ตัว ตามเงื่อนไขแคมเปญ',
+      startsAt: '',          // ISO เช่น 2026-11-10T00:00:00+07:00; ว่าง = ไม่กำหนด
+      endsAt: ''             // เช่น 2026-11-30T23:59:59+07:00; ต้องตรงกับวันสิ้นสุด Rule จริง
+    },
+
+    // === EDIT S03: สินค้าหลัก ===
+    // id = Parent configurable ID; attributes คือ Attribute ID / Option Value ID ไม่ใช่ SKU
+    main: {
+      key: 'enlight', id: 594, name: 'ENLIGHT', path: '/ergonomic-chair-enlight.html',
+      variants: [
+        { label: 'ดำ', attributes: {343: '214'}, image: '/pub/media/catalog/product/cache/2891eed40c6a15a9c1fe3827f4b31fc9/e/x/export_di-cut_enlight-more_02.png' },
+        { label: 'เทา', attributes: {343: '224'}, image: '/pub/media/catalog/product/cache/2891eed40c6a15a9c1fe3827f4b31fc9/e/x/export_di-cut_enlight-more_16.png' },
+        { label: 'ดำ + ที่วางเท้า', attributes: {343: '336'}, image: '/pub/media/catalog/product/cache/2891eed40c6a15a9c1fe3827f4b31fc9/d/i/di-cut-enlight_03.png' },
+        { label: 'เทา + ที่วางเท้า', attributes: {343: '337'}, image: '/pub/media/catalog/product/cache/2891eed40c6a15a9c1fe3827f4b31fc9/d/i/di-cut-enlight_35.png' }
+      ]
+    },
+
+    // === EDIT S04: สินค้าซื้อคู่ ===
+    // เพิ่ม/ลบ object ได้ ไม่ต้องสร้าง select เอง Script อ่าน Attribute จาก PDP
+    // quantity ซื้อคู่ = 1 ต่อรายการที่เลือก ไม่คูณตามจำนวนเก้าอี้ ไม่อ้างสิทธิ์อัตราส่วน 1:1
+    // dealText เป็นข้อความที่คุณยืนยันแล้วเท่านั้น ไม่ใช้เพื่อแก้ราคาในตะกร้า
+    addons: [
+      { key: 'desk', id: 567, name: 'โต๊ะปรับระดับไฟฟ้า มอเตอร์คู่', path: '/ergonomic-adjustable-dual-motor-desk.html', dealText: '' }
+    ],
+
+    // === EDIT S05: สินค้าแนะนำ — รองรับหลายรายการและหลาย Attribute ===
+    // path ต้องเป็น URL หน้าสินค้าจริงในร้านเดียวกัน; ผิด URL จะปิดปุ่มของรายการนั้น
+    related: [
+      { key: 'holder', id: 651, name: 'ที่วางของอเนกประสงค์', path: '/multi-function-holder.html' },
+      { key: 'laptop', id: 229, name: 'แท่นวางโน้ตบุ๊กปรับระดับ', path: '/product/ergonomic-work/other-accessories/ergonomic-adjustable-laptop-stand.html' },
+      { key: 'armrest', id: 650, name: 'ที่วางแขน', path: '/armrest-support.html' }
+    ],
+
+    // === EDIT S06: ของแถม — ข้อมูลนำเสนอเท่านั้น ไม่ POST สินค้าราคาเต็มเป็นของฟรี ===
+    // Magento / Free Gift extension ต้องเพิ่มของแถมจริงและตรวจเงื่อนไขเอง
+    gifts: {
+      enabled: true,
+      verified: false, // ยังไม่ได้ตั้ง/ตรวจ Free Gift Rule จริง
+      items: [
+        {name:'ที่พักเท้า 2 ชั้น', image:'/pub/media/catalog/product/cache/2891eed40c6a15a9c1fe3827f4b31fc9/2/0/20260623_revise_mkp_x_logo_ergonomic_office_gadgets__ef02.jpg', mode:'always', terms:'ตัวอย่างของแถมเมื่อซื้อ ENLIGHT • ยังไม่เปิดสิทธิ์จริง'},
+        // { name:'ชื่อของแถมที่ยืนยันแล้ว', image:'/media/wysiwyg/gift.jpg', mode:'always', terms:'รับ 1 ชิ้นต่อคำสั่งซื้อที่ร่วมรายการ' },
+        // { name:'ของแถมเมื่อซื้อครบ', image:'/media/wysiwyg/gift2.jpg', mode:'threshold', threshold:15000, terms:'ยอดร่วมรายการก่อนใช้โค้ด 15,000 บาทขึ้นไป' }
+      ]
+    }
+  };
+
+  // === EDIT S07: ข้อความระบบ ปรับภาษาได้ แต่ไม่ลบข้อความเมื่อเพิ่มบางรายการแล้ว ===
+  const TEXT = {
+    loading: 'กำลังอ่านราคาและตัวเลือกจาก Magento…',
+    ready: 'เลือกแบบและจำนวน แล้วเพิ่มลงตะกร้าได้เลย • ตรวจยอดสุทธิและสิทธิ์โปรโมชั่นในตะกร้า',
+    disabled: 'ขณะนี้ปิดการเพิ่มสินค้าจากหน้านี้อยู่',
+    failed: 'อ่านข้อมูลสินค้าไม่สำเร็จ กรุณาโหลดหน้าใหม่ หรือดูหน้าสินค้าปกติ',
+    partial: 'ระบบหยุดแล้ว: บางรายการอาจเข้าตะกร้าแล้ว โปรดเปิดตรวจตะกร้าก่อนกดเพิ่มอีกครั้ง'
+  };
+
+  // ===== โค้ดทำงานด้านล่าง ปกติไม่ต้องแก้ =====
+  function boot() {
+    // ทำงานเฉพาะ storefront CMS Page ไม่ทำงานใน Page Builder หลังบ้าน
+    if (!document.body.classList.contains('cms-page-view')) return;
+    const root = document.getElementById('bw-enlight-sale');
+    if (!root || root.dataset.initialized) return;
+    root.dataset.initialized = '1';
+    // class นี้จำกัดการซ่อน breadcrumbs ที่หน้าเดียว ใช้ font inheritance จาก theme เดิม
+    document.body.classList.add('bw-enlight-campaign-page');
+    if(CONFIG.hideBreadcrumbs)document.body.classList.add('bw-enlight-hide-breadcrumbs');
+    const draft=CONFIG.presentationMode==='draft';
+    root.classList.toggle('bw-is-draft',draft);
+    root.querySelector('#bw-draft-banner').hidden=!draft;
+    const $ = selector => root.querySelector(selector);
+    const state = { main: null, variant: null, addons: [], related: [], busy: false, locked: false };
+    const money = value => '฿' + Number(value).toLocaleString('th-TH', {minimumFractionDigits:0,maximumFractionDigits:2});
+    const node = (tag, className, text) => { const el = document.createElement(tag); if (className) el.className=className; if (text !== undefined) el.textContent=text; return el; };
+    const norm = value => String(value || '').normalize('NFKC').replace(/\s+/g,' ').trim().toLowerCase();
+    const normalizeHTML = value => { const d=new DOMParser().parseFromString(String(value || ''),'text/html');return norm(d.body.textContent); };
+    const publicRequests = new Map();
+
+    function sameStore(path) {
+      const url = new URL(path, location.origin);
+      if (url.origin !== location.origin || url.username || url.password || !/^https?:$/.test(url.protocol)) throw new Error('URL ต้องอยู่ร้านเดียวกัน');
+      return url;
+    }
+    function endpoint(path) { return sameStore(CONFIG.storeBase.replace(/\/?$/, '/') + path.replace(/^\//,'')); }
+    function safeImage(path) {
+      try { const url=new URL(path,location.origin);return url.protocol==='https:' && url.origin===location.origin ? url.href : ''; } catch { return ''; }
+    }
+    function setImage(img, src, alt) { const safe=safeImage(src);if(safe) img.src=safe;if(alt) img.alt=alt; }
+    function message(text, error) { $('#bw-status').textContent=text;$('#bw-status').parentElement.classList.toggle('is-error',!!error); }
+    function showReload() { $('#bw-reload').hidden=false; }
+    async function request(url, options) {
+      const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),CONFIG.timeoutMs);
+      try { const res=await fetch(url,{credentials:'same-origin',...options,signal:controller.signal});if(!res.ok)throw new Error('เซิร์ฟเวอร์ตอบกลับ '+res.status);if(res.redirected && new URL(res.url).origin!==location.origin)throw new Error('ปลายทางไม่ใช่ร้านเดียวกัน');return res; }
+      finally {clearTimeout(timer);}
+    }
+    function walk(object, visit) {
+      if (!object || typeof object!=='object') return;
+      Object.keys(object).forEach(key=>{visit(key,object[key]);walk(object[key],visit);});
+    }
+    function initializers(doc) {
+      const result=[];
+      doc.querySelectorAll('script[type="text/x-magento-init"],[data-mage-init]').forEach(el=>{
+        try { result.push(JSON.parse(el.tagName==='SCRIPT' ? el.textContent : el.getAttribute('data-mage-init'))); } catch { /* ไม่ evaluate script ที่ไม่ใช่ JSON */ }
+      });return result;
+    }
+    async function product(def) {
+      const url=sameStore(def.path);let pending=publicRequests.get(url.href);
+      if (!pending) { pending=request(url.href,{cache:'no-store'}).then(r=>r.text()).then(text=>new DOMParser().parseFromString(text,'text/html'));publicRequests.set(url.href,pending); }
+      const doc=await pending;
+      const form=doc.querySelector('#product_addtocart_form');
+      if (!form || String(form.querySelector('[name="product"]')?.value)!==String(def.id)) throw new Error('Product ID กับ URL ไม่ตรงกัน: '+def.name);
+      // เลือกข้อมูลของ PDP หลัก ไม่อ่าน finalPrice ของ Related Product ที่อยู่ด้านล่างผิดตัว
+      let config=null;let gallery=[];
+      initializers(doc).forEach(init=>walk(init,(key,value)=>{
+        if(key==='jsonConfig' && value?.attributes && value?.index && String(value.productId)===String(def.id)) config=value;
+        if(key==='mage/gallery/gallery' && Array.isArray(value?.data)) gallery=value.data;
+      }));
+      const requiredOptions=Array.from(form.querySelectorAll('.product-custom-option,[name^="options["],[name^="bundle_option["],[name^="links["]'));
+      if(requiredOptions.length) throw new Error('รายการนี้มี Custom/Bundle/Downloadable Options ที่หน้านี้ไม่รองรับ');
+      const attributes=config ? Object.values(config.attributes).sort((a,b)=>Number(a.position||0)-Number(b.position||0)) : [];
+      if(!config && (doc.querySelector('.swatch-opt,.super-attribute-select') || form.querySelector('[name^="super_attribute["]'))) throw new Error('อ่านข้อมูล Configurable ไม่ได้');
+      const priceEl=doc.querySelector('.product-info-main [data-price-type="finalPrice"]') || form.querySelector('[data-price-type="finalPrice"]');
+      const image=gallery.find(x=>x.isMain)?.img || gallery[0]?.img || doc.querySelector('meta[property="og:image"]')?.content || '';
+      const stock=doc.querySelector('.product-info-main .stock');
+      return {def,doc,config,attributes,gallery,defaultImage:image,price:priceEl?Number(priceEl.getAttribute('data-price-amount')):NaN,outOfStock:!!stock?.classList.contains('unavailable')};
+    }
+    function choice(p, attributes) {
+      if(p.outOfStock)return null;
+      if(!p.config)return Number.isFinite(p.price) && p.price>=0 ? {price:p.price,old:p.price,attributes:{},child:String(p.def.id),labels:[],image:p.defaultImage} : null;
+      if(p.attributes.some(a=>!attributes[a.id]))return null;
+      const child=Object.keys(p.config.index).find(id=>p.attributes.every(a=>String(p.config.index[id][a.id])===String(attributes[a.id])));
+      if(!child)return null;
+      // index/option.products เป็นข้อมูลตัวเลือกที่เปิดให้เลือก; stock ล่าสุดยังยืนยันโดย Magento ตอน Add
+      if(p.attributes.some(a=>!a.options.some(o=>String(o.id)===String(attributes[a.id]) && (o.products||[]).map(String).includes(child))))return null;
+      // Magento บางเวอร์ชันส่ง salable เป็นตาราง attribute/option -> child IDs
+      const salable=p.config.salable;
+      if(salable && !Array.isArray(salable) && Object.keys(salable).length && p.attributes.some(a=>Array.isArray(salable[a.id]?.[attributes[a.id]]) && !salable[a.id][attributes[a.id]].map(String).includes(child)))return null;
+      const prices=p.config.optionPrices?.[child];const price=Number(prices?.finalPrice?.amount);
+      if(!Number.isFinite(price)||price<0)return null;
+      const labels=p.attributes.map(a=>({label:a.label,value:a.options.find(o=>String(o.id)===String(attributes[a.id]))?.label||''}));
+      const images=p.config.images?.[child]||[];
+      return {child,attributes:{...attributes},labels,price,old:Number(prices.oldPrice?.amount)||price,image:images.find(i=>i.isMain)?.img||images[0]?.img||p.defaultImage};
+    }
+    function readQty() { const value=Number($('#bw-qty').value);return Number.isInteger(value)&&value>=1&&value<=CONFIG.maxQty ? value : null; }
+    function campaignLive() {
+      const c=CONFIG.coupon,now=Date.now();
+      const timeOK=(!c.startsAt || (Number.isFinite(Date.parse(c.startsAt)) && now>=Date.parse(c.startsAt))) && (!c.endsAt || (Number.isFinite(Date.parse(c.endsAt)) && now<=Date.parse(c.endsAt)));
+      return c.enabled && (c.verified || draft) && !!c.code.trim() && Number.isFinite(c.fixedDiscountPerMainUnit) && c.fixedDiscountPerMainUnit>0 && timeOK;
+    }
+    function mainSelection() {
+      const radio=$('[name="bw-variant"]:checked');const preset=CONFIG.main.variants[Number(radio?.value)];
+      return state.main && preset ? choice(state.main,preset.attributes) : null;
+    }
+    function refreshMainImage() {
+      const selected=mainSelection();const preset=CONFIG.main.variants[Number($('[name="bw-variant"]:checked')?.value)];
+      if(selected) setImage($('#bw-main-image'),selected.image||preset.image,'Bewell ENLIGHT '+preset.label);
+      galleryIndex=-1;$('#bw-gallery-count').textContent='แบบที่เลือก';
+      root.querySelectorAll('.bw-thumb').forEach(b=>b.setAttribute('aria-pressed','false'));
+    }
+    function refresh() {
+      const selected=mainSelection(),qty=readQty();state.variant=selected;
+      $('#bw-price').textContent=selected?money(selected.price):'กรุณาเลือกแบบ';
+      $('#bw-old-price').hidden=!(selected && selected.old>selected.price);
+      $('#bw-old-price').textContent=selected?money(selected.old):'';
+      $('#bw-sticky-price').textContent=selected?money(selected.price):'เลือกแบบ';
+      const c=CONFIG.coupon;const active=campaignLive();$('#bw-coupon').hidden=!active;
+      const eligible=active&&selected&&qty&&selected.price*qty>=c.minMainSubtotal;
+      $('#bw-campaign-price').hidden=!eligible;
+      root.classList.toggle('bw-has-campaign-price',!!eligible);
+      $('#bw-base-price-label').textContent=eligible?'ราคาสินค้าก่อนใช้โค้ด':'ราคาสินค้าตามตัวเลือก';
+      $('#bw-price-badge').textContent=eligible?(draft&&!c.verified?'ราคาตัวอย่าง':'ข้อเสนอแคมเปญ'):'ราคาตามตัวเลือก';
+      $('#bw-after-code-label').textContent=draft&&!c.verified?'ราคาหลังโค้ด • ตัวอย่างใน Draft':'ประมาณการหลังใช้โค้ด';
+      $('#bw-after-code-note').textContent=draft&&!c.verified?'ยังใช้โค้ดนี้ซื้อจริงไม่ได้ • ตะกร้าใช้ราคา Magento จริง':'ต่อ 1 ชิ้น • ตรวจสิทธิ์และยอดสุทธิในตะกร้า';
+      if(eligible)$('#bw-after-code').textContent=money(Math.max(0,selected.price-c.fixedDiscountPerMainUnit));
+      const chosen=state.addons.filter(p=>p.checkbox.checked);
+      let total=selected&&qty?selected.price*qty:null;
+      chosen.forEach(p=>{const s=p.getSelection();if(!s)total=null;else if(total!==null)total+=s.price;});
+      $('#bw-total').textContent=total===null?'กรุณาเลือกตัวเลือกให้ครบ':money(total);
+      const blocked=state.busy||state.locked||!CONFIG.cartEnabled||!selected||!qty;
+      $('#bw-buy').disabled=!!blocked;
+      $('#bw-buy-bundle').disabled=!!blocked||total===null;
+      state.related.forEach(p=>p.button.disabled=state.busy||state.locked||!CONFIG.cartEnabled||!p.getSelection());
+      root.querySelectorAll('#bw-main-form input,.bw-card-fields select,.bw-check input').forEach(el=>el.disabled=state.busy||state.locked||el.dataset.unavailable==='1');
+      renderGifts(total);
+    }
+    function renderGifts(total) {
+      const gifts=CONFIG.gifts;$('#bw-gifts').hidden=!(gifts.enabled&&(gifts.verified||draft)&&gifts.items.length);
+      $('#bw-gift-disclaimer').textContent=draft&&!gifts.verified?'ตัวอย่างของแถมใน Draft • ยังไม่ใช่สิทธิ์จริง':'สิทธิ์จริงเป็นไปตามกฎโปรโมชั่นในตะกร้า';
+      if($('#bw-gifts').hidden)return;
+      const list=$('#bw-gift-list');list.replaceChildren();
+      gifts.items.forEach(g=>{
+        const card=node('article','bw-gift-card');if(g.image){const img=node('img');setImage(img,g.image,g.name);img.loading='lazy';card.append(img);}
+        const content=node('div');content.append(node('span','bw-gift-kicker',g.mode==='threshold'?'แถมเมื่อครบเงื่อนไข':'ของแถมพิเศษ'),node('h3','',g.name),node('p','',g.terms||'ตามเงื่อนไขโปรโมชั่น'));card.append(node('span','bw-gift-ribbon',draft&&!gifts.verified?'ตัวอย่าง':'GIFT'));
+        let text=draft&&!gifts.verified?'รูปสินค้าจริง • การแสดงนี้ยังไม่เพิ่มของแถมในตะกร้า':'ของแถมสำหรับสินค้าที่ร่วมรายการ • ยืนยันสิทธิ์ในตะกร้า';
+        if(g.mode==='threshold')text=total===null?'เลือกสินค้าให้ครบเพื่อตรวจยอดเบื้องต้น':total>=Number(g.threshold)?'ยอดที่เลือกถึงเกณฑ์เบื้องต้น • ยืนยันสิทธิ์ในตะกร้า':'ยอดที่เลือกยังขาด '+money(Math.max(0,Number(g.threshold)-total))+' ถึงเกณฑ์เบื้องต้น';
+        content.append(node('p','',text));card.append(content);list.append(card);
+      });
+    }
+    function buildMain(p) {
+      state.main=p;const target=$('#bw-main-options');target.replaceChildren();
+      CONFIG.main.variants.forEach((v,index)=>{
+        const selected=choice(p,v.attributes),label=node('label','bw-option'),input=node('input');input.type='radio';input.setAttribute('form','bw-main-form');input.name='bw-variant';input.value=String(index);input.required=true;
+        if(!selected){input.disabled=true;input.dataset.unavailable='1';}
+        const img=node('img');img.loading='lazy';setImage(img,selected?.image||v.image,v.label);
+        label.append(input,img,node('span','',v.label),node('span','bw-small',selected?money(selected.price):'ไม่พร้อมจำหน่าย'));
+        target.append(label);input.addEventListener('change',()=>{refreshMainImage();refresh();});
+      });
+      const first=target.querySelector('input:not(:disabled)');if(first)first.checked=true;
+      const thumbs=$('#bw-thumbnails');thumbs.replaceChildren();
+      p.gallery.slice(0,16).forEach((entry,index)=>{
+        const button=node('button','bw-thumb');button.type='button';button.setAttribute('aria-label','ดูรูปสินค้า '+(index+1));button.setAttribute('aria-pressed','false');
+        const img=node('img');img.loading='lazy';setImage(img,entry.thumb||entry.img,'รูปสินค้า '+(index+1));button.append(img);
+        button.addEventListener('click',()=>{showGallery(index);});thumbs.append(button);
+      });
+      refreshMainImage();refresh();
+      $('#bw-price-note').textContent=draft&&!CONFIG.coupon.verified?'ราคาหลังโค้ดและของแถมเป็นตัวอย่าง • ปุ่มซื้อเพิ่มสินค้าจริงด้วยราคา Magento โดยยังไม่ลด ENLIGHT1000':'ราคาที่อ่านจากหน้าสินค้า Magento • ตรวจสิทธิ์และยอดสุทธิในตะกร้า';
+      message(CONFIG.cartEnabled?TEXT.ready:TEXT.disabled);
+    }
+    async function buildCard(def, type) {
+      const container=$(type==='addon'?'#bw-addon-list':'#bw-related-list');
+      const card=node('article','bw-product-card'),img=node('img'),title=node('h3','',def.name),price=node('div','bw-card-price','กำลังอ่านราคา…'),fields=node('div','bw-card-fields');
+      card.append(img,title,price,fields);img.loading='lazy';img.width=400;img.height=300;
+      const link=node('a','bw-small','ดูรายละเอียดสินค้า');link.href=sameStore(def.path).href;card.append(link);
+      let checkbox,button;
+      if(type==='addon') { const label=node('label','bw-check');checkbox=node('input');checkbox.type='checkbox';checkbox.disabled=true;label.append(checkbox,document.createTextNode('เลือกซื้อคู่ 1 ชิ้น'));card.append(label); }
+      else { button=node('button','bw-outline','เพิ่มลงตะกร้า');button.type='button';button.disabled=true;card.append(button); }
+      container.append(card);
+      try {
+        const p=await product(def);const controls=[];
+        p.attributes.forEach(a=>{
+          const label=node('label','',a.label),select=node('select');select.setAttribute('aria-label',def.name+' '+a.label);select.dataset.attribute=a.id;
+          const empty=node('option','','กรุณาเลือก '+a.label);empty.value='';select.append(empty);
+          a.options.forEach(o=>{const option=node('option','',o.label);option.value=String(o.id);select.append(option);});label.append(select);fields.append(label);controls.push(select);
+        });
+        const getSelection=()=>choice(p,Object.fromEntries(controls.map(select=>[select.dataset.attribute,select.value])));
+        function updateCard() {
+          // Disable ชุด Attribute ที่ไม่มี child ตรงกัน โดยยังคงเลือกค่าอื่นใหม่ได้
+          controls.forEach(select=>Array.from(select.options).forEach(option=>{
+            if(!option.value)return;
+            const partial=Object.fromEntries(controls.filter(other=>other!==select&&other.value).map(other=>[other.dataset.attribute,other.value]));partial[select.dataset.attribute]=option.value;
+            option.disabled=!Object.keys(p.config.index).some(child=>Object.entries(partial).every(([a,v])=>String(p.config.index[child][a])===String(v)));
+          }));
+          const selected=getSelection();price.textContent=selected?money(selected.price):(p.outOfStock?'สินค้าหมด':'เลือกตัวเลือกเพื่อดูราคา');
+          setImage(img,selected?.image||p.defaultImage,def.name);
+          if(checkbox){checkbox.disabled=state.busy||state.locked||!selected;checkbox.dataset.unavailable=selected?'0':'1';if(!selected)checkbox.checked=false;}
+          refresh();
+        }
+        controls.forEach(select=>select.addEventListener('change',updateCard));
+        if(type==='addon') {
+          const item={...p,checkbox,getSelection};state.addons.push(item);checkbox.addEventListener('change',refresh);
+          if(def.dealText)card.insertBefore(node('p','bw-deal-tag',def.dealText),fields);
+        } else { const item={...p,button,getSelection};state.related.push(item);button.addEventListener('click',()=>buy([{product:p,selection:getSelection(),qty:1}])); }
+        updateCard();
+      } catch(error) {price.textContent='ยังไม่พร้อมจำหน่ายจากหน้านี้';card.append(node('p','bw-small','กรุณาดูรายละเอียดที่หน้าสินค้า หรือแจ้งผู้ดูแลให้ตรวจ URL / Product ID'));img.hidden=true;}
+    }
+    function formKey() { const match=document.cookie.match(/(?:^|;\s*)form_key=([^;]+)/);try{return match?decodeURIComponent(match[1]):'';}catch{return '';} }
+    async function cart() {
+      const url=endpoint('customer/section/load/');url.searchParams.set('sections','cart');url.searchParams.set('force_new_section_timestamp','true');url.searchParams.set('_',String(Date.now()));
+      const res=await request(url.href,{cache:'no-store',headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'}});
+      const data=await res.json();if(!data.cart || !Array.isArray(data.cart.items))throw new Error('ไม่สามารถตรวจสถานะตะกร้าได้');return data.cart;
+    }
+    function cartQty(snapshot, item) {
+      return snapshot.items.filter(line=>{
+        const id=String(line.product_id);if(id!==String(item.product.def.id) && id!==String(item.selection.child))return false;
+        return item.selection.labels.every(expect=>(line.options||[]).some(o=>normalizeHTML(o.label)===norm(expect.label)&&normalizeHTML(o.value)===norm(expect.value)));
+      }).reduce((total,line)=>total+(Number(line.qty)||0),0);
+    }
+    async function addOne(item) {
+      const token=formKey();if(!token)throw new Error('ยังไม่มีเซสชันตะกร้า กรุณารีโหลดหน้า');
+      const before=await cart();
+      const body=new URLSearchParams({form_key:token,product:String(item.product.def.id),qty:String(item.qty)});
+      Object.entries(item.selection.attributes).forEach(([a,v])=>body.set('super_attribute['+a+']',v));
+      const res=await request(endpoint('checkout/cart/add/').href,{method:'POST',cache:'no-store',headers:{'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8','X-Requested-With':'XMLHttpRequest','Accept':'application/json'},body:body.toString()});
+      // HTTP 200 อย่างเดียวไม่ได้ยืนยันว่าเพิ่มสำเร็จ ต้องอ่าน JSON และตรวจ qty ที่ตะกร้า
+      let result;try{result=await res.json();}catch{throw new Error('ผลตอบกลับไม่ใช่ JSON กรุณาตรวจตะกร้า');}
+      if(result?.error || result?.errors)throw new Error('Magento ไม่ยืนยันรายการที่เลือก กรุณาตรวจสต็อกและตัวเลือกในตะกร้า');
+      // ร้านที่เปิด Redirect to Cart อาจคืน backUrl แม้สำเร็จ จึงไม่ใช้ URL เป็นหลักฐานสำเร็จ/ล้มเหลว
+      // ไม่ตาม redirect นี้เอง ตรวจว่าอยู่ร้านเดียวกัน แล้วใช้จำนวนจริงใน cart section เป็นหลัก
+      if(result?.backUrl)sameStore(result.backUrl);
+      const after=await cart();
+      if(cartQty(after,item)-cartQty(before,item)!==item.qty)throw new Error('ยังยืนยันจำนวนสินค้าที่เพิ่มไม่ได้ กรุณาตรวจตะกร้าก่อนลองใหม่');
+    }
+    async function refreshMiniCart() {
+      if(typeof window.require!=='function')return;
+      // ใช้ Magento customer-data invalidate/reload เพื่อให้ badge/minicart อ่านจากเซิร์ฟเวอร์
+      window.require(['Magento_Customer/js/customer-data'],function(customerData){customerData.invalidate(['cart']);customerData.reload(['cart'],true);});
+    }
+    async function buy(items) {
+      if(state.busy||state.locked||!CONFIG.cartEnabled)return;
+      if(location.origin!==CONFIG.allowedOrigin){message('หน้าและตะกร้าต้องอยู่โดเมนร้านที่กำหนด',true);return;}
+      if(!items.length || items.some(i=>!i.selection||!Number.isInteger(i.qty)||i.qty<1||i.qty>CONFIG.maxQty)){message('กรุณาเลือกตัวเลือกและจำนวนให้ครบ',true);return;}
+      state.busy=true;refresh();root.setAttribute('aria-busy','true');
+      try {
+        if(!formKey())throw new Error('ยังไม่มีเซสชันตะกร้า กรุณารีโหลดหน้า');
+        for(let index=0;index<items.length;index++){message('กำลังเพิ่มสินค้า '+(index+1)+' / '+items.length+' …');await addOne(items[index]);}
+        refreshMiniCart();message('เพิ่มสินค้าที่เลือกครบแล้ว กรุณาตรวจยอดสุทธิและสิทธิ์โปรโมชั่นในตะกร้า');
+        state.locked=true; // กันการกดซ้ำในหน้าที่เพิ่มสำเร็จแล้ว
+        if(CONFIG.redirectToCart)location.assign(endpoint('checkout/cart/').href);else showReload();
+      } catch(error) {
+        // ไม่มี automatic retry/rollback เพราะรายการก่อนหน้าอาจสำเร็จแล้ว
+        state.locked=true;message((error.name==='AbortError'?'การเชื่อมต่อใช้เวลานานเกินกำหนด':error.message)+' — '+TEXT.partial,true);showReload();refreshMiniCart();
+      } finally {state.busy=false;root.removeAttribute('aria-busy');refresh();}
+    }
+
+    // EDIT S08: แกลเลอรี ลูกศร / ปัด / คีย์บอร์ด / autoplay พร้อมปุ่มหยุด
+    let galleryIndex=-1,carouselPaused=false,pointerStart=null,hovering=false,timer=null;
+    const stage=$('.bw-gallery-stage'),reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+    function showGallery(index,direction) {
+      const entries=state.main?.gallery||[];if(!entries.length)return;
+      galleryIndex=(index+entries.length)%entries.length;
+      const entry=entries[galleryIndex];setImage($('#bw-main-image'),entry.img||entry.full,'Bewell ENLIGHT รูป '+(galleryIndex+1));
+      $('#bw-gallery-count').textContent=(galleryIndex+1)+' / '+entries.length;
+      $('#bw-thumbnails').querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-pressed',String(i===galleryIndex)));
+      if(!reduced.matches && $('#bw-main-image').animate)$('#bw-main-image').animate([{opacity:.35,transform:'translateX('+(direction===-1?'-16px':'16px')+')'},{opacity:1,transform:'translateX(0)'}],{duration:240,easing:'ease-out'});
+    }
+    function moveGallery(direction){const count=state.main?.gallery.length||0;if(count)showGallery(galleryIndex<0?(direction>0?0:count-1):galleryIndex+direction,direction);}
+    $('#bw-gallery-prev').addEventListener('click',()=>moveGallery(-1));
+    $('#bw-gallery-next').addEventListener('click',()=>moveGallery(1));
+    stage.addEventListener('keydown',event=>{if(event.target!==stage)return;if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();moveGallery(event.key==='ArrowLeft'?-1:1);}});
+    stage.addEventListener('pointerdown',event=>{if(event.target.closest('button'))return;pointerStart={x:event.clientX,y:event.clientY};});
+    stage.addEventListener('pointerup',event=>{if(!pointerStart)return;const dx=event.clientX-pointerStart.x,dy=event.clientY-pointerStart.y;pointerStart=null;if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy))moveGallery(dx<0?1:-1);});
+    stage.addEventListener('pointercancel',()=>pointerStart=null);
+    stage.addEventListener('mouseenter',()=>hovering=true);stage.addEventListener('mouseleave',()=>hovering=false);
+    function toggleLabel(){const paused=carouselPaused||!CONFIG.gallery.autoplay||reduced.matches;$('#bw-gallery-toggle').textContent=paused?'เล่นอัตโนมัติ':'หยุดเล่นอัตโนมัติ';$('#bw-gallery-toggle').setAttribute('aria-label',paused?'เล่นรูปอัตโนมัติ':'หยุดเล่นรูปอัตโนมัติ');}
+    $('#bw-gallery-toggle').addEventListener('click',()=>{CONFIG.gallery.autoplay=true;carouselPaused=!carouselPaused;if(reduced.matches)carouselPaused=true;toggleLabel();});toggleLabel();
+    timer=setInterval(()=>{if(!root.isConnected){clearInterval(timer);return;}if(!CONFIG.gallery.autoplay||carouselPaused||hovering||reduced.matches||document.hidden||state.busy||root.querySelector('.bw-hero').contains(document.activeElement))return;const rect=stage.getBoundingClientRect();if(rect.bottom>0&&rect.top<innerHeight)moveGallery(1);},Math.max(3000,Number(CONFIG.gallery.intervalMs)||5500));
+    $('#bw-qty').max=String(CONFIG.maxQty);$('#bw-qty').addEventListener('input',refresh);
+    $('#bw-main-form').addEventListener('submit',event=>{event.preventDefault();buy([{product:state.main,selection:mainSelection(),qty:readQty()}]);});
+    $('#bw-buy-bundle').addEventListener('click',()=>{
+      const items=[{product:state.main,selection:mainSelection(),qty:readQty()}];
+      state.addons.filter(p=>p.checkbox.checked).forEach(p=>items.push({product:p,selection:p.getSelection(),qty:1}));buy(items);
+    });
+    $('#bw-reload').addEventListener('click',()=>location.reload());
+    $('#bw-cart-link').href=endpoint('checkout/cart/').href;
+    $('#bw-coupon-code').textContent=CONFIG.coupon.code;$('#bw-coupon-terms').textContent=draft&&!CONFIG.coupon.verified?'โค้ดตัวอย่างใน Draft • ยังไม่ได้เปิดใช้จริง':CONFIG.coupon.terms;
+    $('#bw-copy').addEventListener('click',async()=>{
+      if(!campaignLive())return;
+      try {await navigator.clipboard.writeText(CONFIG.coupon.code);$('#bw-copy').textContent='คัดลอกแล้ว';}
+      catch {message('คัดลอกอัตโนมัติไม่ได้ กรุณาเลือกข้อความโค้ด '+CONFIG.coupon.code+' แล้วคัดลอกด้วยตนเอง',true);}
+    });
+    $('#bw-addon-list').replaceChildren();$('#bw-related-list').replaceChildren();
+    if(!CONFIG.addons.length)$('#bw-addons').hidden=true;
+    if(!CONFIG.related.length)$('#bw-related-list').closest('section').hidden=true;
+    if(location.origin!==CONFIG.allowedOrigin) {message('ไฟล์นี้ต้องวางบน Magento ที่ '+CONFIG.allowedOrigin+' เพื่ออ่านข้อมูลและเพิ่มสินค้า ไม่สามารถใช้งานจริงจากไฟล์ในคอมพิวเตอร์',true);return;}
+    message(TEXT.loading);
+    product(CONFIG.main).then(buildMain).catch(()=>{message(TEXT.failed,true);$('#bw-price').textContent='ไม่สามารถอ่านราคาได้';$('#bw-price-note').textContent='ไม่ได้ใช้ราคาเก่าจาก POC แทนราคา Magento';showReload();});
+    CONFIG.addons.forEach(def=>buildCard(def,'addon'));
+    CONFIG.related.forEach(def=>buildCard(def,'related'));
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+
+</script>

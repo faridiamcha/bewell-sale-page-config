@@ -1,0 +1,122 @@
+<!--
+BEWELL ENLIGHT / POC-ALIGNED LAYOUT V2 / 2026-11-03
+วางใน Page Builder > HTML Code เท่านั้น ไม่วางใน Text Editor
+แก้ข้อความขายที่ EDIT Hxx; ข้อมูลสินค้า/โค้ด/กฎแสดงผลแก้ในไฟล์ 03-SCRIPT.js
+ใช้ 1 หน้า = 1 ชุด ห้ามซ้ำ id="bw-enlight-sale" ในหน้าเดียวกัน
+ไม่ต้องเพิ่ม header/footer ของเว็บ เพราะ Magento แสดงให้อยู่แล้ว
+-->
+<div id="bw-enlight-sale" class="bw-poc-layout" lang="th">
+  <div id="bw-draft-banner" class="bw-draft-banner" hidden>DRAFT PREVIEW • ราคาหลังโค้ดและของแถมเป็นตัวอย่าง ยังไม่ใช่สิทธิ์ซื้อจริง</div>
+  <!-- EDIT H01: ป้ายแคมเปญ; ไม่อ้างว่าเฉพาะ Ads เพราะ URL ไม่ใช่ระบบจำกัดสิทธิ์ -->
+  <div class="bw-topline">BEWELL EXCLUSIVE SELECTION <span>พื้นที่ทำงานที่ลงตัว เริ่มจากเก้าอี้ที่ใช่</span></div>
+  <nav class="bw-nav" aria-label="เมนูหน้า ENLIGHT">
+    <a class="bw-wordmark" href="#bw-offer">ENLIGHT<span>BY BEWELL</span></a>
+    <div><a href="#bw-detail">จุดเด่น</a><a href="#bw-addons">เลือกซื้อคู่</a><a href="#bw-faq">คำถามที่พบบ่อย</a></div>
+    <a class="bw-nav-cta" href="#bw-offer">เลือกเก้าอี้ของคุณ</a>
+  </nav>
+
+  <section class="bw-hero bw-wrap" id="bw-offer" aria-labelledby="bw-title">
+    <div class="bw-visual">
+      <div class="bw-gallery-stage" role="group" aria-roledescription="carousel" aria-label="แกลเลอรี ENLIGHT" tabindex="0">
+        <div class="bw-visual-word" aria-hidden="true">enlight.</div>
+        <span class="bw-tag">ERGONOMIC CHAIR</span>
+        <!-- EDIT H02: รูปเริ่มต้น; Script เปลี่ยนเป็นรูปจริงตามตัวเลือกจาก PDP -->
+        <img id="bw-main-image" width="800" height="800" fetchpriority="high"
+          src="https://bewellofficial.com/pub/media/catalog/product/cache/2891eed40c6a15a9c1fe3827f4b31fc9/e/x/export_di-cut_enlight-more_02.png"
+          alt="เก้าอี้เพื่อสุขภาพ Bewell ENLIGHT สีดำ">
+        <div class="bw-visual-note"><span></span> Dynamic Backrest<small>ขยับรับทุกจังหวะของคุณ</small></div>
+        <div class="bw-seal">5<small>YEAR<br>WARRANTY*</small></div>
+        <button type="button" class="bw-gallery-arrow bw-gallery-prev" id="bw-gallery-prev" aria-label="รูปก่อนหน้า">‹</button>
+        <button type="button" class="bw-gallery-arrow bw-gallery-next" id="bw-gallery-next" aria-label="รูปถัดไป">›</button>
+        <div class="bw-gallery-toolbar"><span id="bw-gallery-count">แบบที่เลือก</span><button id="bw-gallery-toggle" type="button" aria-label="หยุดเล่นรูปอัตโนมัติ">หยุดเล่นอัตโนมัติ</button></div>
+      </div>
+      <div id="bw-thumbnails" class="bw-thumbnails" aria-label="รูปสินค้าเพิ่มเติม"></div>
+      <p class="bw-caption">ปัดซ้าย–ขวา หรือกดลูกศรเพื่อดูรูปสินค้า • หยุดอัตโนมัติเมื่อชี้เมาส์หรือเลือกตัวควบคุม</p>
+    </div>
+    <div class="bw-offer">
+      <!-- EDIT H03: ชื่อ/คำโปรย ต้องตรงสินค้าจริง ไม่ใส่ราคาตายตัวใน HTML -->
+      <p class="bw-eyebrow">MAKE YOUR EVERYDAY WORK BETTER</p>
+      <h1 id="bw-title">นั่งสบาย<br>ในจังหวะ<span>ของคุณ.</span></h1>
+      <p class="bw-subtitle">Bewell ENLIGHT Ergonomic Chair</p>
+      <p class="bw-intro">ขยับอย่างเป็นธรรมชาติ ด้วยพนักพิง Dynamic Backrest พร้อมเลือกความสบายในแบบของคุณ</p>
+        <fieldset class="bw-fieldset"><legend>เลือกแบบที่ใช่สำหรับคุณ</legend><div id="bw-main-options" class="bw-option-grid"></div></fieldset>
+      <div class="bw-pricebox">
+        <div class="bw-deal-heading"><span>THE ENLIGHT SPECIAL</span><span id="bw-price-badge" class="bw-demo-badge">ราคาตามตัวเลือก</span></div>
+        <span id="bw-base-price-label" class="bw-small">ราคาสินค้าก่อนใช้โค้ด</span>
+        <div class="bw-price-row"><strong id="bw-price">กำลังอ่านราคา…</strong><del id="bw-old-price" hidden></del></div>
+        <div id="bw-campaign-price" class="bw-campaign-price" hidden>
+          <span id="bw-after-code-label">ราคาพิเศษหลังใช้โค้ด</span><strong id="bw-after-code"></strong>
+          <small id="bw-after-code-note">ต่อ 1 ชิ้น • ตรวจสิทธิ์และยอดสุทธิในตะกร้า</small>
+        </div>
+      <div id="bw-coupon" class="bw-coupon" hidden>
+        <div><span class="bw-small">สิทธิ์พิเศษสำหรับแคมเปญ</span><strong id="bw-coupon-code"></strong><p id="bw-coupon-terms"></p></div>
+        <button type="button" class="bw-outline" id="bw-copy">คัดลอกโค้ด</button>
+      </div>
+      </div>
+      <!-- Draft แสดงตัวอย่าง; Live ต้อง CONFIG.coupon.verified=true หลังทดสอบ Rule จริง -->
+
+      <p class="bw-small" id="bw-price-note">กำลังตรวจข้อมูลจาก Magento กรุณารอสักครู่</p>
+  <section class="bw-inline-gifts" id="bw-gifts" hidden aria-labelledby="bw-gifts-title">
+    <div class="bw-section-head"><div><p class="bw-eyebrow">A LITTLE EXTRA FOR YOU</p><h2 id="bw-gifts-title">สิทธิ์ของแถมพิเศษ</h2></div><p id="bw-gift-disclaimer">สิทธิ์จริงเป็นไปตามกฎโปรโมชั่นในตะกร้า</p></div>
+    <div class="bw-gift-grid" id="bw-gift-list"></div>
+  </section>
+      <form id="bw-main-form">
+
+        <div class="bw-buy-row">
+          <label class="bw-qty-label" for="bw-qty">จำนวน
+            <input id="bw-qty" name="qty" type="number" min="1" max="10" step="1" value="1" inputmode="numeric" required>
+          </label>
+          <button id="bw-buy" class="bw-primary" type="submit" disabled>เพิ่มลงตะกร้า</button>
+        </div>
+      </form>
+      <div class="bw-services">
+        <!-- EDIT H04: สิทธิ์บริการ ต้องยืนยันเงื่อนไขและพื้นที่ก่อนเปิดขาย -->
+        <span>จัดส่งและประกอบ*<small>ตามพื้นที่ให้บริการ</small></span>
+        <span>รับประกัน 5 ปี*<small>เฉพาะโช้ค ฐาน และล้อ</small></span>
+        <span>ชำระผ่านระบบเว็บ<small>ตรวจยอดก่อนชำระเงิน</small></span>
+      </div>
+      <a class="bw-text-link" href="/warranty-conditions">ดูเงื่อนไขการรับประกัน</a>
+    </div>
+  </section>
+
+  <div class="bw-feedback bw-wrap" aria-live="polite" aria-atomic="true"><p id="bw-status">กำลังโหลดข้อมูลสินค้า…</p><a id="bw-cart-link" href="/checkout/cart/">ตรวจตะกร้าสินค้า</a><button id="bw-reload" type="button" class="bw-outline" hidden>โหลดข้อมูลหน้าใหม่</button></div>
+  <noscript><p class="bw-noscript">กรุณาเปิด JavaScript เพื่อเลือกแบบและเพิ่มสินค้า หรือ <a href="/ergonomic-chair-enlight.html">ดูหน้าสินค้าปกติ</a></p></noscript>
+
+  <!-- EDIT H05: กล่องของแถมอยู่เหนือปุ่มซื้อแล้ว แก้รายการใน CONFIG.gifts ไม่เพิ่ม Gift SKU จากหน้าเอง -->
+
+
+
+
+  <section class="bw-wrap bw-section" id="bw-addons" aria-labelledby="bw-addon-title">
+    <div class="bw-section-head"><div><p class="bw-eyebrow">COMPLETE YOUR WORKSPACE</p><h2 id="bw-addon-title">เลือกซื้อคู่ให้ครบมุมทำงาน</h2></div><p>เลือกสินค้าและตัวเลือกเพิ่มเติมได้ในหน้านี้</p></div>
+    <div id="bw-addon-list" class="bw-addon-grid"><p>กำลังอ่านข้อมูลสินค้าซื้อคู่…</p></div>
+    <div class="bw-bundle-summary"><div><span>รวมสินค้าที่เลือก ก่อนใช้โค้ด</span><strong id="bw-total">—</strong><small id="bw-total-note">รวมเก้าอี้และสินค้าซื้อคู่ที่เลือก ไม่รวมสินค้าที่มีอยู่ในตะกร้า</small></div><button id="bw-buy-bundle" type="button" class="bw-primary" disabled>เพิ่มสินค้าที่เลือกลงตะกร้า</button></div>
+    <p class="bw-small">การเลือกซื้อคู่ไม่ทำให้เกิดส่วนลดเอง ส่วนลดและของแถมคำนวณโดย Magento หลังเพิ่มสินค้าแล้ว</p>
+  </section>
+
+<section class="bw-intro-band"><p class="bw-eyebrow">WORK WELL. REST WELL.</p><h2>เก้าอี้ที่เข้าใจ<br><span>ทุกองศาของวันคุณ</span></h2><p>ทั้งนั่งโฟกัสกับงาน หรือเอนพักระหว่างวัน<br>ENLIGHT ให้คุณปรับท่านั่งได้ในแบบที่สบายกับตัวเอง</p><a href="#bw-detail">สำรวจความสบาย ↓</a></section>
+  <section class="bw-feature-band" id="bw-detail" aria-labelledby="bw-detail-title">
+    <div class="bw-wrap bw-feature-layout">
+      <div class="bw-feature-photo"><img id="bw-feature-image" width="800" height="800" loading="lazy" src="https://bewellofficial.com/pub/media/catalog/product/cache/2891eed40c6a15a9c1fe3827f4b31fc9/2/0/20251215_mkp-enlight-01.jpg" alt="รายละเอียดเก้าอี้ Bewell ENLIGHT"></div>
+      <div><p class="bw-eyebrow">DESIGNED AROUND YOU</p><h2 id="bw-detail-title">ให้เก้าอี้ปรับเข้าหาคุณ</h2><p>รายละเอียดที่ช่วยให้คุณจัดท่านั่งได้เหมาะกับการทำงานในแต่ละวัน</p>
+        <!-- EDIT H06: จุดเด่นอ้างอิง Product Description; ตรวจอีกครั้งเมื่อเปลี่ยนสินค้า -->
+        <ol class="bw-features"><li><span>01</span><div><h3>Dynamic Backrest</h3><p>พนักพิงหลังแบบคู่ เคลื่อนไหวอิสระตามร่างกาย พร้อมปรับการรองรับแผ่นหลัง</p></div></li><li><span>02</span><div><h3>พนักพิงศีรษะ 3D</h3><p>ปรับสูง–ต่ำ องศา และระยะลึก–ตื้น ให้เข้ากับตำแหน่งการนั่ง</p></div></li><li><span>03</span><div><h3>เบาะนั่ง W-Shape</h3><p>โอบรับสะโพกและต้นขา พร้อมปรับความลึกเบาะให้เหมาะกับสรีระ</p></div></li></ol>
+      </div>
+    </div>
+  </section>
+<section class="bw-wrap bw-lifestyle"><img loading="lazy" width="800" height="800" src="https://bewellofficial.com/pub/media/catalog/product/cache/2891eed40c6a15a9c1fe3827f4b31fc9/2/0/20251215_mkp-enlight-07.jpg" alt="รายละเอียดและการใช้งานเก้าอี้ ENLIGHT"><div><p class="bw-eyebrow">YOUR SPACE. YOUR PACE.</p><h2>งานก็ไปต่อได้<br>พักก็เต็มที่ได้</h2><p>ปรับแรงต้านพนักพิงและล็อกเอนได้ 3 ระดับ พร้อมที่วางแขน 3D ที่ปรับตามท่าทางของคุณ</p><div class="bw-height-fact"><strong>160–190 <small>cm</small></strong><span>ช่วงส่วนสูงที่แนะนำตามข้อมูลสินค้า</span></div><a href="#bw-offer">เลือกความสบายของคุณ ↗</a></div></section>
+  <section class="bw-related-band"><div class="bw-wrap bw-section" aria-labelledby="bw-related-title"><div class="bw-section-head"><div><p class="bw-eyebrow">BETTER TOGETHER</p><h2 id="bw-related-title">เติมความสบายอีกนิด</h2></div><p>สินค้าเพิ่มเติมที่คุณเลือกซื้อได้</p></div><div id="bw-related-list" class="bw-related-grid"><p>กำลังอ่านข้อมูลสินค้าแนะนำ…</p></div></div></section>
+  <!-- OPTIONAL H07: ถ้าต้องการ Native Product Widget ให้ใส่ Page Builder Products อีก Element ใต้ HTML นี้
+  และปิด CONFIG.related=[] ไม่วาง widget directive เป็นข้อความใน Script -->
+
+  <section class="bw-assurance"><div><span>01 / DELIVERY</span><h3>ส่งถึงบ้าน</h3><p>จัดส่งและประกอบตามพื้นที่ให้บริการ*</p></div><div><span>02 / YOUR CHOICE</span><h3>ความสบายที่เลือกได้</h3><p>เลือกสีและรุ่นให้ตรงกับมุมทำงานของคุณ</p></div><div><span>03 / WARRANTY</span><h3>ดูแลระยะยาว</h3><p>รับประกัน 5 ปี เฉพาะโช้ค ฐาน และล้อ ตามเงื่อนไข*</p></div></section>
+  <section class="bw-wrap bw-section bw-faq" id="bw-faq" aria-labelledby="bw-faq-title"><div class="bw-section-head"><div><p class="bw-eyebrow">GOOD TO KNOW</p><h2 id="bw-faq-title">ก่อนเลือก ENLIGHT ของคุณ</h2></div></div>
+    <!-- EDIT H08: FAQ ไม่รับรองส่วนลดที่ยังไม่ได้ตั้ง rule -->
+    <details><summary>เพิ่มสินค้าได้เลย หรือต้องไปหน้าสินค้าอีกครั้ง?</summary><p>เลือกแบบและจำนวนแล้วเพิ่มลงตะกร้าได้จากหน้านี้ หากแบบที่เลือกหมดหรือข้อมูลไม่พร้อม ระบบจะแจ้งให้ตรวจสอบก่อน</p></details>
+    <details><summary>ใช้โค้ดส่วนลดอย่างไร?</summary><p>ถ้ามีโค้ดแสดงในหน้านี้ ให้คัดลอกแล้วกรอกในช่องส่วนลดที่ตะกร้าหรือขั้นตอนชำระเงิน ระบบจะตรวจเงื่อนไขและแสดงยอดสุทธิอีกครั้ง</p></details>
+    <details><summary>ของแถมและดีลซื้อคู่ยืนยันตรงไหน?</summary><p>ตรวจรายการสินค้า ของแถม และยอดส่วนลดในตะกร้าก่อนชำระเงิน สิทธิ์ขึ้นอยู่กับตัวเลือกสินค้า เงื่อนไขโปรโมชั่น และสินค้าคงเหลือ</p></details>
+    <details><summary>การรับประกันครอบคลุมอะไรบ้าง?</summary><p>รับประกัน 5 ปีเฉพาะโช้ค ฐานปลาดาว และล้อ ตามเงื่อนไขที่บริษัทกำหนด <a href="/warranty-conditions">อ่านเงื่อนไขฉบับเต็ม</a></p></details>
+  </section>
+  <section class="bw-closing"><p class="bw-eyebrow">A BETTER DAY STARTS WITH A BETTER SEAT.</p><h2>ถึงเวลาให้ความสบาย<br>เป็นส่วนหนึ่งของทุกวัน</h2><a class="bw-primary" href="#bw-offer">กลับไปเลือก ENLIGHT ↑</a></section>
+  <div class="bw-sticky"><div><span>ENLIGHT</span><strong id="bw-sticky-price">—</strong></div><a class="bw-primary" href="#bw-offer">เลือกแบบ / เพิ่มลงตะกร้า</a></div>
+</div>

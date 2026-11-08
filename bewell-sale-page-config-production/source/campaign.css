@@ -1,0 +1,24 @@
+
+/* Sale Page Config: gallery, product content, quantity and button styling */
+#bw-enlight-sale .bw-gallery-stage{min-height:0;aspect-ratio:1;justify-content:center;background:#f5f6f3}
+#bw-enlight-sale .bw-gallery-stage>img{width:100%;height:100%;margin:0;mix-blend-mode:normal;opacity:1;object-fit:contain}
+#bw-enlight-sale .bw-gallery-toolbar{justify-content:flex-end;pointer-events:none}
+#bw-enlight-sale #bw-gallery-count{background:#fff;border-radius:999px;padding:3px 10px}
+#bw-enlight-sale .bw-thumb img{mix-blend-mode:normal;opacity:1}
+#bw-enlight-sale :is(button,.bw-primary,.bw-outline,.bw-nav-cta),#bw-enlight-sale #bw-copy{border-radius:999px}
+#bw-enlight-sale .bw-qty-control{display:flex;align-items:center;gap:6px}
+#bw-enlight-sale .bw-qty-step{width:34px;height:34px;padding:0;flex:none;border:1px solid var(--bw-line,#ccd5d0);background:#fff;color:var(--bw-ink,#16382c)}
+#bw-enlight-sale .bw-qty-step:disabled{opacity:.5}
+#bw-enlight-sale #bw-qty{appearance:textfield;width:46px;padding-inline:3px;text-align:center}
+#bw-enlight-sale #bw-qty::-webkit-inner-spin-button,#bw-enlight-sale #bw-qty::-webkit-outer-spin-button{appearance:none;margin:0}
+#bw-enlight-sale select{appearance:none;background-image:none}
+#bw-enlight-sale .bw-main-attributes{grid-template-columns:repeat(auto-fit,minmax(min(100%,136px),1fr));gap:12px}
+#bw-enlight-sale .bw-main-attribute{display:grid;gap:5px;font-size:13px}
+#bw-enlight-sale .bw-main-attribute select{width:100%;min-height:42px;border:1px solid var(--bw-line,#ccd5d0);border-radius:12px;padding:6px 12px;background-color:#fff;color:inherit}
+#bw-enlight-sale .bw-pdp-details{padding-block:40px}
+#bw-enlight-sale #bw-pdp-description{max-width:820px;margin-inline:auto;overflow-wrap:anywhere;overflow-x:auto}
+#bw-enlight-sale #bw-pdp-description img{display:block;margin:16px auto;max-width:100%;height:auto;mix-blend-mode:normal}
+#bw-enlight-sale #bw-pdp-description :is(h3,h4,h5,h6){margin:20px 0 8px}
+#bw-enlight-sale #bw-pdp-description table{width:100%;border-collapse:collapse}
+#bw-enlight-sale #bw-pdp-description :is(th,td){padding:8px;border:1px solid #dbe4de}
+@media(max-width:480px){#bw-enlight-sale .bw-buy-row{flex-wrap:wrap}#bw-enlight-sale .bw-buy-row .bw-primary{width:100%}}
